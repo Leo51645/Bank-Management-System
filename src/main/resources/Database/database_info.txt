@@ -1,0 +1,3 @@
+jdbc:mysql://localhost:3306/bank_management_database
+root
+Fischfilet1806&
