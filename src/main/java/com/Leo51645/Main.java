@@ -19,6 +19,7 @@ public class Main {
         Connection connection = database.connection_get(connection_info);
 
         boolean connectionStatus = database.connection_check(connection);
+        System.out.println(connectionStatus);
         if (connectionStatus) {
             Utils.printLoadingScreen();
             services.getRegistration(connection);

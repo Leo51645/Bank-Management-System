@@ -59,7 +59,10 @@ public class Services {
             } else if (userAction.equals(UserInput_beforeLogin.LOGIN.command)) {
                 registrationStatus = login.loginIntoAccount(connection);
             } else {
-                System.out.println("Failed to create Account or login");
+                System.out.println("Invalid command. Please enter either '" + UserInput_beforeLogin.CREATEACCOUNT.command + "' or '" + UserInput_beforeLogin.LOGIN.command + "'");
+                userAction = null;
+                System.out.println("---------------------------------------------------------------------");
+                Utils.stop(1000);
             }
         }
     }

@@ -64,6 +64,9 @@ public class Database {
         try {
             if (connection.isValid(2)) {
                 connection_status = true;
+                LOGGER.info("Connection is valid");
+            } else {
+                LOGGER.warning("Connection is not valid");
             }
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, "Failed to check connection\n" + e.getMessage(), e);
