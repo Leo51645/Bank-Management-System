@@ -1,18 +1,17 @@
 package com.Leo51645.mysql;
 
-import com.Leo51645.enums.*;
-import com.Leo51645.services.Services;
-import com.Leo51645.services.account_management.login.Login;
+import com.Leo51645.services.fileLogging.FileLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.logging.*;
 import java.io.*;
 
-public class Database {
+public abstract class Database {
 
-    private static final Logger LOGGER = Logger.getLogger(Database.class.getName());
+    private final Logger LOGGER = Logger.getLogger(Database.class.getName());
+
+    FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
 
     // Method for getting the infos for the connection(url, user, password)
     public ArrayList<String> connection_getInfos(File file) {
@@ -25,15 +24,17 @@ public class Database {
             while ((line = bufferedReader.readLine()) != null) {
                 connection_infos.add(line);
             }
-
+            fileLogger.logIntoFile(Level.INFO, "Got the database infos successfully");
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to get necessary info about the database\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.WARNING, "Failed to get connection infos. Error code: 01", e);
+            System.out.println("Something went wrong, please try again. Error code: 01");
         }
 
         return connection_infos;
     }
     // Method for creating the connection to the Database
     public Connection connection_get(ArrayList<String> connection_infos)  {
+
         Connection connection = null;
 
         String url;
@@ -46,15 +47,18 @@ public class Database {
                 user = connection_infos.get(1);
                 password = connection_infos.get(2);
             } else {
-                throw new IllegalArgumentException("Incorrect database info");
+                throw new IllegalArgumentException();
             }
 
             connection = DriverManager.getConnection(url, user, password);
+            fileLogger.logIntoFile(Level.INFO, "Connected to database successfully");
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Failed to connect to database\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.SEVERE, "Failed to connect to database. Error code: 02", e);
+            System.out.println("Something went wrong, please try again. Error code: 02");
         } catch (IllegalArgumentException e) {
-            LOGGER.log(Level.SEVERE, "Failed to get database info correctly\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.SEVERE, "Failed to get correct database info. Error code: 03", e);
+            System.out.println("Something went wrong, please try again. Error code: 03");
         }
         return connection;
     }
@@ -64,35 +68,15 @@ public class Database {
         try {
             if (connection.isValid(2)) {
                 connection_status = true;
-                LOGGER.info("Connection is valid");
+                fileLogger.logIntoFile(Level.INFO, "Connection is valid");
             } else {
-                LOGGER.warning("Connection is not valid");
+                fileLogger.logIntoFile(Level.SEVERE, "Connection is not valid");
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Failed to check connection\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.INFO, "Failed to check database connection. Error code: 04", e);
+            System.out.println("Something went wrong, please try again - Error Code: 04");
         }
         return connection_status;
-    }
-
-    // Method for creating different query's for the table bank_members
-    public String bankMembers_createInsertQuery(String table) {
-        return "Insert into " + table + " (First_Name, Last_Name, Phone_Number, Email, account_pin, Password) values (?, ?, ?, ?, ?, ?)";
-    }
-    public String bankMembers_createUpdateQuery(String table, String columnToUpdate, String condition_column) {
-        return "Update " + table + " set " + columnToUpdate + " = ? where " + condition_column + " = ?";
-    }
-    public String bankMembers_createDeleteQuery(String table, String condition_column) {
-        return "Delete from "+ table + " where " + condition_column + " = ?";
-    }
-
-    public String bankMembers_createSelectQuery(String table) {
-        return "Select * from " + table;
-    }
-    public String bank_Members_createSelectQuery(String table, String condition_column) {
-        return "Select * from " + table + " where " + condition_column + " = ?";
-    }
-    public String bank_Members_createSelectQuery(String table, String specific_column, String condition_column) {
-        return "Select " + specific_column + " from " + table + " where " + condition_column + " = ?";
     }
 
     // Method for creating a statement which holds the query
@@ -100,8 +84,10 @@ public class Database {
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = connection.prepareStatement(query);
+            fileLogger.logIntoFile(Level.INFO, "Created preparedStatement successfully");
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Failed to create PreparedStatement\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.SEVERE, "Failed to create PreparedStatement. Error code: 05", e);
+            System.out.println("Something went wrong, please try again. Error code: 05");
         }
         return preparedStatement;
     }
@@ -109,39 +95,32 @@ public class Database {
     public void preparedStatement_executeUpdate(PreparedStatement preparedStatement) {
         try {
             preparedStatement.executeUpdate();
+            fileLogger.logIntoFile(Level.INFO, "Executed the preparedStatement successfully");
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Failed to execute Query\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.WARNING, "Failed to execute query in the PreparedStatement. Error Code: 06", e);
+            System.out.println("Something went wrong, please try again. Error code 06");
         }
     }
 
     // Methods for setting the values
-    public void bankMembers_setValues_InsertQuery(PreparedStatement preparedStatement, String setFirst_Name, String setLast_Name, String setPhone_Number, String setEmail, String set_account_pin, String set_password) {
-        try {
-            preparedStatement.setString(1, setFirst_Name);
-            preparedStatement.setString(2, setLast_Name);
-            preparedStatement.setString(3, setPhone_Number);
-            preparedStatement.setString(4, setEmail);
-            preparedStatement.setString(5, set_account_pin);
-            preparedStatement.setString(6, set_password);
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Failed to set variables correctly in insert query\n" + e.getMessage(), e);
-        }
-
-    }
-    public <T, E> void bank_Members_setValues_UpdateQuery(PreparedStatement preparedStatement, T x1, E x2) {
+    public <T, E> void setValues_twoPlaceholder(PreparedStatement preparedStatement, T x1, E x2) {
         try {
             preparedStatement.setObject(1, x1);
             preparedStatement.setObject(2, x2);
+            fileLogger.logIntoFile(Level.INFO, "Set two values in the preparedStatement successfully");
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Failed to set variables correctly in update query\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.WARNING, "Failed to set the two variables correctly in query. Error code: 07", e);
+            System.out.println("Something went wrong, please try again. Error code: 07");
         }
 
     }
-    public void bank_Members_setValues_onePlaceholder(PreparedStatement preparedStatement, String x1) {
+    public <T> void setValues_onePlaceholder(PreparedStatement preparedStatement, T x1) {
         try {
-            preparedStatement.setString(1, x1);
+            preparedStatement.setObject(1, x1);
+            fileLogger.logIntoFile(Level.INFO, "Set one value in the preparedStatement successfully");
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Failed to set variables correctly in delete query\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.WARNING, "Failed to set the one variable correctly in query. Error code: 08", e);
+            System.out.println("Something went wrong, please try again. Error code: 08");
         }
     }
 
@@ -150,8 +129,10 @@ public class Database {
         ResultSet resultSet = null;
         try {
             resultSet = preparedStatement.executeQuery();
+            fileLogger.logIntoFile(Level.INFO, "Created resultSet successfully");
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Failed to create ResultSet\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.SEVERE, "Failed to create resultSet. Error code: 09", e);
+            System.out.println("Something went wrong, please try again. Error code: 09");
         }
         return resultSet;
     }
@@ -166,74 +147,12 @@ public class Database {
                     values_ResultSet.add(resultSet.getObject(i));
                 }
             }
+            fileLogger.logIntoFile(Level.INFO, "Got all values of the resultSet successfully");
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Failed to get values of resultSet\n" + e.getMessage(), e);
+            fileLogger.logIntoFile(Level.WARNING, "Failed to get values of resultSet. Error code: 10", e);
+            System.out.println("Something went wrong, please try again. Error code: 10");
         }
         return values_ResultSet;
-    }
-    // Method for printing out all values of the resultSet
-    public void resultSet_printAllValues(ArrayList<Object> valuesOfResultSet) {
-        for (Object value : valuesOfResultSet) {
-            System.out.println(value);
-        }
-    }
-    // Method for getting one specific column from the database
-    public Object resultSet_selectSpecificColumn(Connection connection, String table, String columnToSelect, String condition_column, Object valueOfConditionColumn) {
-        Object data = null;
-        String valueOfConditionColumn_new = valueOfConditionColumn.toString();
-        String query = bank_Members_createSelectQuery(table, columnToSelect, condition_column);
-
-        try (PreparedStatement preparedStatement = preparedStatement_create(connection, query)) {
-
-            bank_Members_setValues_onePlaceholder(preparedStatement, valueOfConditionColumn_new);
-
-            try (ResultSet resultSet = resultSet_create(preparedStatement)){
-                String columnType;
-                if (resultSet.next()) {
-                    columnType = resultSet.getMetaData().getColumnTypeName(1);
-                } else {
-                    LOGGER.log(Level.WARNING, "Result set is empty\n");
-                    return null;
-                }
-
-                if (columnType == null) {
-                    LOGGER.log(Level.WARNING, "Empty column type\n");
-                    return null;
-                }
-
-                switch (columnType) {
-                    case "VARCHAR": data = resultSet.getString(1);
-                        break;
-                    case "DECIMAL": data = resultSet.getDouble(1);
-                        break;
-                    case "INT": data = resultSet.getInt(1);
-                }
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "\n" + e.getMessage(), e);
-        }
-
-        return data;
-    }
-
-    // Method for checking if there already exits something in the database
-    public boolean unique_exists(Connection connection, String columnToCheck, String inputToCheck) {
-        boolean status = true;
-        String query = bank_Members_createSelectQuery(Table.BANK_MEMBERS.tableName, columnToCheck);
-
-        try (PreparedStatement preparedStatement = preparedStatement_create(connection, query)) {
-            bank_Members_setValues_onePlaceholder(preparedStatement, inputToCheck);
-
-            try (ResultSet resultSet = resultSet_create(preparedStatement)) {
-                ArrayList<Object> data = resultSet_getAllValues(resultSet);
-                status = !data.isEmpty();
-            }
-        } catch (SQLException e) {
-            System.out.println("Failed to check if theres already a unique one");
-        }
-
-        return status;
     }
 
     }

@@ -1,15 +1,22 @@
 package com.Leo51645.utils;
 
 import com.Leo51645.enums.Bank_Members_Columns;
-import com.Leo51645.enums.Table;
-import com.Leo51645.mysql.Database;
+import com.Leo51645.mysql.Database_BankMembers;
 import com.Leo51645.services.account_management.login.Login;
+import com.Leo51645.services.fileLogging.FileLogger;
 
 import java.sql.Connection;
 import java.time.LocalTime;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Utils {
+
+    private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
+
+    public static FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
+
 
     public static void printLoadingScreen() {
         System.out.println("---------------------------------------------------------------------");
@@ -22,6 +29,7 @@ public class Utils {
                 "           `---' ");
         System.out.println("---------------------------------------------------------------------");
         stop(3000);
+        fileLogger.logIntoFile(Level.INFO, "Loading screen");
     }
 
     public static void printListOfActions_bl() {
@@ -33,19 +41,18 @@ public class Utils {
         System.out.println("---------------------------------------------------------------------");
     }
 
-    public static void printStartGUI(Connection connection) {
+    public static void printStartGUI(Connection connection, Login login) {
 
-        Database database = new Database();
-        Login login = new Login(database);
+        Database_BankMembers database_bankMembers = new Database_BankMembers();
         Object email_object = login.getEmail();
         String email = email_object.toString();
 
-        Object lastName = database.resultSet_selectSpecificColumn(connection, Table.BANK_MEMBERS.tableName, Bank_Members_Columns.LASTNAME.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object lastName = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.LASTNAME.columnName, Bank_Members_Columns.EMAIL.columnName, email);
 
-        Object accountBalance_withoutEuro = database.resultSet_selectSpecificColumn(connection, Table.BANK_MEMBERS.tableName, Bank_Members_Columns.ACCOUNTBALANCE.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object accountBalance_withoutEuro = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.ACCOUNTBALANCE.columnName, Bank_Members_Columns.EMAIL.columnName, email);
         String accountBalance = String.format("%.2f€", accountBalance_withoutEuro);
 
-        Object iban = database.resultSet_selectSpecificColumn(connection, Table.BANK_MEMBERS.tableName, Bank_Members_Columns.IBAN.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object iban = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.IBAN.columnName, Bank_Members_Columns.EMAIL.columnName, email);
 
         String time = getTime();
 
@@ -61,6 +68,7 @@ public class Utils {
                            "|                How can we help you with?                           |\n" +
                            "|                  .transfer || .invest || .logout                   |\n" +
                            "---------------------------------------------------------------------");
+        fileLogger.logIntoFile(Level.INFO, "Start GUI");
     }
 
     public static void stop(int milliseconds) {

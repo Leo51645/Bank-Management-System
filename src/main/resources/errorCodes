@@ -1,0 +1,47 @@
+Main:
+Error code 00: Database is currently offline
+
+Database:
+Error code 01: Failed to get connection infos
+Error code 02: Failed to connect to database
+Error code 03: Failed to get correct database info
+Error code 04: Failed to check database connection
+Error code 05: Failed to create PreparedStatement
+Error code 06: Failed to execute query in the PreparedStatement
+Error code 07: Failed to set the two variables correctly in query
+Error code 08: Failed to set the one variables correctly in query
+Error code 09: Failed to create resultSet
+Error code 10: Failed to get values of resultSet
+
+Database_BankMembers:
+Error code 11: Failed to set variables correctly in insert query
+Error code 12: ResultSet is empty
+Error code 13: Empty column type
+Error code 14: Failed to get one specific column out of the database
+Error code 15: Failed to check if a unique already exists
+
+Services:
+Error code 16: Failed to get the user correct user info and with that to create a new account or to login
+
+CreateAccount:
+Error code 17: Failed to insert the main values into the database
+Error code 18: Failed to insert the account number into the database
+Error code 21: Wrong input submitted
+Error code 22: Failed to create Iban in createAccount
+
+Iban:
+Error code 19: Failed to get account number out of the database
+Error code 20: Failed to create iban
+
+Login:
+Error code 23: Failed to login
+
+FileLogger:
+Error code 24: Failed to log into a file
+Error code 25: File name is null at FileLogger
+Error code 26: Failed to create log file
+
+Deposit:
+Error code 27: Failed to deposit money
+
+

@@ -1,20 +1,29 @@
 package com.Leo51645.services.account_management.createAccount;
 
+import com.Leo51645.enums.Bank_Members_Columns;
 import com.Leo51645.mysql.*;
 import com.Leo51645.services.extras.*;
+import com.Leo51645.services.fileLogging.FileLogger;
 
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Iban {
 
-    private final Database database;
+    private final Database_BankMembers database_bankMembers;
+
+    private static final Logger LOGGER = Logger.getLogger(Iban.class.getName());
+
+    FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
+
 
     ExtraFunctions extraFunctions;
 
-    public Iban(Database database) {
-        this.database = database;
+    public Iban(Database_BankMembers database_bankMembers) {
+        this.database_bankMembers = database_bankMembers;
         this.extraFunctions = new ExtraFunctions();
     }
 
@@ -28,12 +37,16 @@ public class Iban {
         int firstNumber_of_countryCode = extraFunctions.letterToNumber(firstChar_of_countryCode);
         int secondNumber_of_country = extraFunctions.letterToNumber(secondCharOfCountryCode);
 
-        String accountNumber = iban_accountNumber_get(database, connection, emailOfUser);
+        String accountNumber = iban_accountNumber_get(database_bankMembers, connection, emailOfUser);
         String checkNumber = iban_checkNumber_create(bank_number, accountNumber, firstNumber_of_countryCode, secondNumber_of_country);
 
         if (accountNumber != null && checkNumber != null) {
             return countryCode + " " + checkNumber + " " + bank_number + " " + accountNumber;
-        } else return null;
+        } else {
+            fileLogger.logIntoFile(Level.WARNING, "Failed to create iban. Error code: 20");
+            System.out.println("Something went wrong, please try again. Error code: 20");
+            return null;
+        }
     }
 
     // Method for creating the check number of the iban
@@ -55,12 +68,12 @@ public class Iban {
     public String iban_accountNumber_get(Database database, Connection connection, String emailOfUser) {
         ArrayList<Object> resultSetData = null;
 
-        String query = database.bank_Members_createSelectQuery("bank_members", "account_number", "Email");
+        String query = database_bankMembers.createSelectQuery(Bank_Members_Columns.ACCOUNTNUMBER.columnName, Bank_Members_Columns.EMAIL.columnName);
 
         try (PreparedStatement preparedStatement = database.preparedStatement_create(connection, query)) {
-            database.bank_Members_setValues_onePlaceholder(preparedStatement, emailOfUser);
+            database_bankMembers.setValues_onePlaceholder(preparedStatement, emailOfUser);
 
-            try (ResultSet resultSet = database.resultSet_create(preparedStatement);) {
+            try (ResultSet resultSet = database.resultSet_create(preparedStatement)) {
                 resultSetData = database.resultSet_getAllValues(resultSet);
 
                 if(resultSetData.isEmpty()) {
@@ -68,7 +81,8 @@ public class Iban {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Failed to get account number of the database");
+            fileLogger.logIntoFile(Level.WARNING, "Failed to get account number out of the database. Error code: 19", e);
+            System.out.println("Something went wrong, please try again. Error code: 19");
         }
 
         return resultSetData.getFirst().toString();
