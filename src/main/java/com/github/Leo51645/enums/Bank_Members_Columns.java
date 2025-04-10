@@ -1,4 +1,4 @@
-package com.Leo51645.enums;
+package com.github.Leo51645.enums;
 
 public enum Bank_Members_Columns {
     MYBANKID("MyBank_Id"),

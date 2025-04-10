@@ -1,25 +1,29 @@
-package com.Leo51645.services.fileLogging;
+package com.github.Leo51645.utils.fileLogging;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
-public class FileLogger {
+public class FallbackLogger {
 
+    private final Logger LOGGER = Logger.getLogger(FallbackLogger.class.getName());
     private FileHandler fileHandler;
-
-    private final Logger LOGGER;
     private final String logDirectory;
 
-    public FileLogger(Logger LOGGER, String logDirectory, boolean logIntoConsole) {
-        this.LOGGER = LOGGER;
+    private FileLogger fileLogger;
+
+    public FallbackLogger(String logDirectory, boolean logIntoConsole, FileLogger fileLogger) {
         this.logDirectory = logDirectory;
         LOGGER.setUseParentHandlers(logIntoConsole);
+        this.fileLogger = fileLogger;
     }
 
-    // Methods for logging the messages and errors into files
     public synchronized void logIntoFile(Level level, String msg) {
         String file_name = logFileCreate();
 
@@ -32,11 +36,11 @@ public class FileLogger {
                 LOGGER.removeHandler(fileHandler);
                 fileHandler.close();
             } catch (IOException e) {
-                logIntoFile(Level.WARNING, "Failed to log: " + msg + ". Error code: 24", e);
+                fileLogger.logIntoFile(Level.SEVERE, "Failed to log: " + msg + " in fileLogger. Error code: 24", e);
                 System.out.println("Something went wrong, please try again. Error code: 24");
             }
         } else {
-            logIntoFile(Level.WARNING, "File name is null at FileLogger. Error code. 25");
+            fileLogger.logIntoFile(Level.SEVERE, "File name is null at FallbackLogger. Error code. 25");
             System.out.println("Something is wrong, please try again. Error code: 25");
         }
     }
@@ -52,17 +56,16 @@ public class FileLogger {
                 LOGGER.removeHandler(fileHandler);
                 fileHandler.close();
             } catch (IOException e) {
-                logIntoFile(Level.WARNING, "Failed to log: " + msg + ". Error code: 24", e);
+                fileLogger.logIntoFile(Level.SEVERE, "Failed to log: " + msg + " in fileLogger. Error code: 24", e);
                 System.out.println("Something went wrong, please try again. Error code: 24");
             }
         } else {
-            logIntoFile(Level.WARNING, "File name is null at FileLogger. Error code. 25");
+            fileLogger.logIntoFile(Level.SEVERE, "File name is null at FallbackLogger. Error code. 25");
             System.out.println("Something is wrong, please try again. Error code: 25");
         }
 
     }
 
-    // Method for creating the file to log in
     String logFileCreate() {
 
         LocalDateTime localDateTime = LocalDateTime.now();
@@ -71,21 +74,23 @@ public class FileLogger {
 
         String file_name = Paths.get(logDirectory, now + ".log").toString();
 
-            try {
-                File file = new File(file_name);
-                boolean status = file.createNewFile();
+        try {
+            File file = new File(file_name);
+            boolean status = file.createNewFile();
 
-                if (status) {
-                    logIntoFile(Level.INFO, "Created file successfully"); // Possible way that it repeats itself
-                } else {
-                    logIntoFile(Level.INFO, "File is already existing");
-                }
-
-            } catch (IOException e) {
-                logIntoFile(Level.SEVERE, "Failed to create log file. Error code: 26", e);
-                System.out.println("Something went wrong, please try again. Error code: 26");
+            if (status) {
+                fileLogger.logIntoFile(Level.INFO, "Created log file successfully");
             }
+
+        } catch (IOException e) {
+            fileLogger.logIntoFile(Level.SEVERE, "Failed to create log file in FallbackLogger. Error code: 26", e);
+            System.out.println("Something went wrong, please try again. Error code: 26");
+        }
         return file_name;
+    }
+
+    public void setFileLogger(FileLogger fileLogger) {
+        this.fileLogger = fileLogger;
     }
 
 }

@@ -1,4 +1,4 @@
-package com.Leo51645.mysql;
+package com.github.Leo51645.mysql;
 
 import java.sql.*;
 import java.util.ArrayList;

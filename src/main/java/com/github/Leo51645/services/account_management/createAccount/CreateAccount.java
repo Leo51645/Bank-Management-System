@@ -1,10 +1,14 @@
-package com.Leo51645.services.account_management.createAccount;
+package com.github.Leo51645.services.account_management.createAccount;
 
-import com.Leo51645.enums.*;
-import com.Leo51645.mysql.*;
-import com.Leo51645.services.extras.ExtraFunctions;
-import com.Leo51645.services.fileLogging.FileLogger;
-import com.Leo51645.utils.*;
+import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.Countries;
+import com.github.Leo51645.enums.FilePaths;
+import com.github.Leo51645.enums.Table;
+import com.github.Leo51645.services.extras.ExtraFunctions;
+import com.github.Leo51645.utils.fileLogging.FallbackLogger;
+import com.github.Leo51645.utils.fileLogging.FileLogger;
+import com.github.Leo51645.mysql.Database_BankMembers;
+import com.github.Leo51645.utils.Utils;
 
 import java.sql.*;
 import java.util.*;
@@ -16,7 +20,8 @@ public class CreateAccount {
     private static final Logger LOGGER = Logger.getLogger(CreateAccount.class.getName());
     private final Scanner scanner = new Scanner(System.in);
 
-    FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
+    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
+    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
 
     Iban iban;
     ExtraFunctions extraFunctions;
@@ -25,6 +30,7 @@ public class CreateAccount {
         this.database_bankMembers = database_bankMembers;
         this.iban = new Iban(database_bankMembers);
         this.extraFunctions = new ExtraFunctions();
+        fallbackLogger.setFileLogger(fileLogger);
     }
 
     // Method for creating an account

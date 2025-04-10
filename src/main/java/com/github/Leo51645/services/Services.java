@@ -1,12 +1,14 @@
-package com.Leo51645.services;
+package com.github.Leo51645.services;
 
-import com.Leo51645.enums.*;
-import com.Leo51645.mysql.*;
-import com.Leo51645.services.account_management.createAccount.*;
-import com.Leo51645.services.account_management.login.*;
-import com.Leo51645.services.extras.*;
-import com.Leo51645.services.fileLogging.FileLogger;
-import com.Leo51645.utils.*;
+import com.github.Leo51645.enums.FilePaths;
+import com.github.Leo51645.enums.UserInput_beforeLogin;
+import com.github.Leo51645.services.extras.ExtraFunctions;
+import com.github.Leo51645.utils.fileLogging.FallbackLogger;
+import com.github.Leo51645.utils.fileLogging.FileLogger;
+import com.github.Leo51645.mysql.Database_BankMembers;
+import com.github.Leo51645.services.account_management.createAccount.CreateAccount;
+import com.github.Leo51645.services.account_management.login.Login;
+import com.github.Leo51645.utils.Utils;
 
 import java.sql.*;
 import java.util.Objects;
@@ -15,21 +17,21 @@ import java.util.logging.*;
 
 public class Services {
 
-    private final Database_BankMembers database_bankMembers;
     private static final Logger LOGGER = Logger.getLogger(Services.class.getName());
     private final Scanner scanner = new Scanner(System.in);
 
-    FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
+    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
+    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
 
     CreateAccount createAccount;
     Login login;
     ExtraFunctions extraFunctions;
 
     public Services(Database_BankMembers database_bankMembers) {
-        this.database_bankMembers = database_bankMembers;
         this.login = new Login(database_bankMembers);
         this.createAccount = new CreateAccount(database_bankMembers);
         this.extraFunctions = new ExtraFunctions();
+        fallbackLogger.setFileLogger(fileLogger);
     }
 
     // Method for getting the user input

@@ -1,9 +1,11 @@
-package com.Leo51645.services.transaction.deposit;
+package com.github.Leo51645.services.transaction.deposit;
 
-import com.Leo51645.enums.*;
-import com.Leo51645.mysql.Database_BankMembers;
-import com.Leo51645.services.account_management.login.Login;
-import com.Leo51645.services.fileLogging.FileLogger;
+import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.FilePaths;
+import com.github.Leo51645.mysql.Database_BankMembers;
+import com.github.Leo51645.services.account_management.login.Login;
+import com.github.Leo51645.utils.fileLogging.FallbackLogger;
+import com.github.Leo51645.utils.fileLogging.FileLogger;
 
 import java.sql.*;
 import java.util.logging.Level;
@@ -15,12 +17,13 @@ public class Deposit {
 
     private static final Logger LOGGER = Logger.getLogger(Deposit.class.getName());
 
-    FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
-
+    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
+    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
 
     public Deposit(Database_BankMembers database_bankMembers, Login login) {
         this.database_bankMembers = database_bankMembers;
         this.email = login.getEmail();
+        fallbackLogger.setFileLogger(fileLogger);
     }
 
     // Method for depositing money onto an account

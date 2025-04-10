@@ -1,4 +1,4 @@
-package com.Leo51645.services.extras;
+package com.github.Leo51645.services.extras;
 
 public class ExtraFunctions {
 

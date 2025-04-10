@@ -1,9 +1,11 @@
-package com.Leo51645.utils;
+package com.github.Leo51645.utils;
 
-import com.Leo51645.enums.Bank_Members_Columns;
-import com.Leo51645.mysql.Database_BankMembers;
-import com.Leo51645.services.account_management.login.Login;
-import com.Leo51645.services.fileLogging.FileLogger;
+import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.FilePaths;
+import com.github.Leo51645.mysql.Database_BankMembers;
+import com.github.Leo51645.services.account_management.login.Login;
+import com.github.Leo51645.utils.fileLogging.FallbackLogger;
+import com.github.Leo51645.utils.fileLogging.FileLogger;
 
 import java.sql.Connection;
 import java.time.LocalTime;
@@ -15,8 +17,12 @@ public class Utils {
 
     private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
 
-    public static FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
+    public static FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
+    public static FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
 
+    public Utils() {
+        fallbackLogger.setFileLogger(fileLogger);
+    }
 
     public static void printLoadingScreen() {
         System.out.println("---------------------------------------------------------------------");

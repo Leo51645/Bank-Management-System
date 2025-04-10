@@ -1,6 +1,8 @@
-package com.Leo51645.mysql;
+package com.github.Leo51645.mysql;
 
-import com.Leo51645.services.fileLogging.FileLogger;
+import com.github.Leo51645.enums.FilePaths;
+import com.github.Leo51645.utils.fileLogging.FallbackLogger;
+import com.github.Leo51645.utils.fileLogging.FileLogger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,7 +13,12 @@ public abstract class Database {
 
     private final Logger LOGGER = Logger.getLogger(Database.class.getName());
 
-    FileLogger fileLogger = new FileLogger(LOGGER, "C:\\Code\\IntelliJ IDEA\\Java\\Others\\Bank Management System(14.02.25)\\Bank Management System\\src\\main\\resources\\log", false);
+    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
+    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+
+    public Database() {
+        fallbackLogger.setFileLogger(fileLogger);
+    }
 
     // Method for getting the infos for the connection(url, user, password)
     public ArrayList<String> connection_getInfos(File file) {
