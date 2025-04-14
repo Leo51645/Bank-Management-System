@@ -20,15 +20,15 @@ public class Iban {
 
     private static final Logger LOGGER = Logger.getLogger(Iban.class.getName());
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
     ExtraFunctions extraFunctions;
 
     public Iban(Database_BankMembers database_bankMembers) {
         this.database_bankMembers = database_bankMembers;
         this.extraFunctions = new ExtraFunctions();
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Method for creating the IBAN
@@ -47,7 +47,7 @@ public class Iban {
         if (accountNumber != null && checkNumber != null) {
             return countryCode + " " + checkNumber + " " + bank_number + " " + accountNumber;
         } else {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to create iban. Error code: 20");
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to create iban. Error code: 20");
             System.out.println("Something went wrong, please try again. Error code: 20");
             return null;
         }
@@ -85,7 +85,7 @@ public class Iban {
                 }
             }
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to get account number out of the database. Error code: 19", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to get account number out of the database. Error code: 19", e);
             System.out.println("Something went wrong, please try again. Error code: 19");
         }
 

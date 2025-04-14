@@ -10,7 +10,8 @@ public enum Bank_Members_Columns {
     EMAIL("Email"),
     ACCOUNTPIN("account_pin"),
     PASSWORD("Password"),
-    ACCOUNTNUMBER("account_number");
+    ACCOUNTNUMBER("account_number"),
+    GENDER("gender");
 
     public final String columnName;
 

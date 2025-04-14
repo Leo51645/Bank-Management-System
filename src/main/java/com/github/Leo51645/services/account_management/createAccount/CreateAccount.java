@@ -20,17 +20,19 @@ public class CreateAccount {
     private static final Logger LOGGER = Logger.getLogger(CreateAccount.class.getName());
     private final Scanner scanner = new Scanner(System.in);
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
     Iban iban;
     ExtraFunctions extraFunctions;
+
+    private String input_Email;
 
     public CreateAccount(Database_BankMembers database_bankMembers) {
         this.database_bankMembers = database_bankMembers;
         this.iban = new Iban(database_bankMembers);
         this.extraFunctions = new ExtraFunctions();
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Method for creating an account
@@ -39,15 +41,9 @@ public class CreateAccount {
         // Declaring variables
         boolean login_status = false;
 
-        boolean isValid_FirstName = false;
-        boolean isValid_LastName = false;
-        boolean isValid_PhoneNumber = false;
-        boolean isValid_Email = false;
-        boolean isValid_Pin = false;
-
         String input_PhoneNumber = null;
         boolean phoneNumber_exists = true;
-        String input_Email = null;
+        input_Email = null;
         boolean email_exists = true;
 
         // Getting the input and checking if the input is valid
@@ -55,29 +51,30 @@ public class CreateAccount {
             System.out.println("Creating a new Account:");
             System.out.println("---------------------------------------------------------------------");
 
-            String input_FirstName = createAccount_checkInputs(isValid_FirstName, Bank_Members_Columns.FIRSTNAME.columnName);
-            String input_LastName = createAccount_checkInputs(isValid_LastName, Bank_Members_Columns.LASTNAME.columnName);
+            String input_FirstName = createAccount_checkInputs(Bank_Members_Columns.FIRSTNAME.columnName);
+            String input_LastName = createAccount_checkInputs(Bank_Members_Columns.LASTNAME.columnName);
+            String input_Gender = createAccount_checkInputs(Bank_Members_Columns.GENDER.columnName);
             while (phoneNumber_exists) {
-                input_PhoneNumber = createAccount_checkInputs(isValid_PhoneNumber, Bank_Members_Columns.PHONENUMBER.columnName);
+                input_PhoneNumber = createAccount_checkInputs(Bank_Members_Columns.PHONENUMBER.columnName);
                 phoneNumber_exists = database_bankMembers.unique_exists(connection, Bank_Members_Columns.PHONENUMBER.columnName, input_PhoneNumber);
 
                 if (phoneNumber_exists) {
                     System.out.println("Phone number already existing, please try again");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "User wanted to create a new account with an already existing phone number");
+                    FILE_LOGGER.logIntoFile(Level.FINE, "User wanted to create a new account with an already existing phone number");
                 }
             }
             while (email_exists) {
-                input_Email = createAccount_checkInputs(isValid_Email, Bank_Members_Columns.EMAIL.columnName);
+                input_Email = createAccount_checkInputs(Bank_Members_Columns.EMAIL.columnName);
                 email_exists = database_bankMembers.unique_exists(connection, Bank_Members_Columns.EMAIL.columnName, input_Email);
 
                 if (email_exists) {
                     System.out.println("Email already existing, please try again");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "User wanted to create a new account with an already existing email");
+                    FILE_LOGGER.logIntoFile(Level.FINE, "User wanted to create a new account with an already existing email");
                 }
             }
-            String input_Pin = createAccount_checkInputs(isValid_Pin, Bank_Members_Columns.ACCOUNTPIN.columnName);
+            String input_Pin = createAccount_checkInputs(Bank_Members_Columns.ACCOUNTPIN.columnName);
 
 
             System.out.print("Please enter your password for your 'MyBank' account: ");
@@ -86,7 +83,7 @@ public class CreateAccount {
             String phoneNumber = input_PhoneNumber.replaceAll("\\s+", "");
 
             // Inserting the main values like first name etc.
-            createAccount_insertMainValues(connection, input_FirstName, input_LastName, phoneNumber, input_Email, input_Pin, input_Password);
+            createAccount_insertMainValues(connection, input_FirstName, input_LastName, phoneNumber, input_Email, input_Pin, input_Password, input_Gender);
             // Inserting the account number into the database
             createAccount_insertAccountNumber(connection, input_Email);
 
@@ -97,44 +94,50 @@ public class CreateAccount {
 
             try (PreparedStatement preparedStatement_iban = database_bankMembers.preparedStatement_create(connection, iban_query)) {
                 // Checking if the iban is valid
-                if(extraFunctions.isValidIban(ibanNumber)) {
+                if(ibanNumber != null && extraFunctions.isValidIban(ibanNumber)) {
                     database_bankMembers.setValues_twoPlaceholder(preparedStatement_iban, ibanNumber, input_Email);
                     database_bankMembers.preparedStatement_executeUpdate(preparedStatement_iban);
-                    System.out.println("Creating account successful");
+                    System.out.println("---------------------------------------------------------------------");
+                    System.out.println("Created account successfully");
                     login_status = true;
-                    fileLogger.logIntoFile(Level.INFO, "Created account of user succefully");
+                    FILE_LOGGER.logIntoFile(Level.INFO, "Created account of user successfully");
                 } else {
-                    fileLogger.logIntoFile(Level.WARNING, "Failed to create Iban in createAccount. Error code: 22");
+                    FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to create Iban in createAccount. Error code: 22");
                     System.out.println("Something went wrong, please try again. Error code: 22");
                 }
             } catch (SQLException e) {
-                fileLogger.logIntoFile(Level.WARNING, "Failed to create Iban in createAccount. Error code: 22", e);
+                FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to create Iban in createAccount. Error code: 22", e);
                 System.out.println("Something went wrong, please try again. Error code: 22");
             }
 
         } catch (InputMismatchException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Wrong input submitted. Error code: 21", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Wrong input submitted. Error code: 21", e);
             System.out.println("Something went wrong, please try again. Error code: 21");
             return false;
         }
         return login_status;
     }
     // Method for checking the input in the createAccount menu
-    public String createAccount_checkInputs(boolean isValidInput, String input_name) {
+    public String createAccount_checkInputs(String input_name) {
         String inputOfUser = null;
+        boolean isValidInput = false;
+
         while(!isValidInput) {
 
-            System.out.print("Please enter your " + input_name + ": ");
+            if (input_name.equals(Bank_Members_Columns.GENDER.columnName)) {
+                System.out.print("Please enter your gender (optional): ");
+            } else {
+                System.out.print("Please enter your " + input_name + ": ");
+            }
             inputOfUser = scanner.nextLine();
             System.out.println("---------------------------------------------------------------------");
-
 
             if (input_name.equals(Bank_Members_Columns.FIRSTNAME.columnName) || input_name.equals(Bank_Members_Columns.LASTNAME.columnName)) {
                 isValidInput = extraFunctions.isValidString(inputOfUser);
                 if (!isValidInput) {
                     System.out.println("To much letters, please try again");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "Input has to much letters at first and last name: " + inputOfUser);
+                    FILE_LOGGER.logIntoFile(Level.FINE, "Input has to much letters at first and last name: " + inputOfUser);
                 }
                 Utils.stop(100);
             }
@@ -143,7 +146,7 @@ public class CreateAccount {
                 if (!isValidInput) {
                     System.out.println("Invalid phone number, please try again");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "Phone number is not a valid one: " + inputOfUser);
+                    FILE_LOGGER.logIntoFile(Level.FINE, "Phone number is not a valid one: " + inputOfUser);
                 }
                 Utils.stop(100);
             }
@@ -152,7 +155,7 @@ public class CreateAccount {
                 if (!isValidInput) {
                     System.out.println("Invalid email, please try again");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "Email is not a valid one: " + inputOfUser);
+                    FILE_LOGGER.logIntoFile(Level.FINE, "Email is not a valid one: " + inputOfUser);
                 }
                 Utils.stop(100);
             }
@@ -161,7 +164,16 @@ public class CreateAccount {
                 if (!isValidInput) {
                     System.out.println("Invalid PIN, has to be 4 digits");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "Pin is not exactly 4 digits: " + inputOfUser);
+                    FILE_LOGGER.logIntoFile(Level.FINE, "Pin is not exactly 4 digits: " + inputOfUser);
+                }
+                Utils.stop(100);
+            }
+            else if (input_name.equals(Bank_Members_Columns.GENDER.columnName)) {
+                isValidInput = extraFunctions.isValidGender(inputOfUser);
+                if (!isValidInput) {
+                    System.out.println("Invalid gender; please enter one of these: 'Male', 'Female', 'Divers'\n or just leave it blank if you don't want to answer");
+                    System.out.println("---------------------------------------------------------------------");
+                    FILE_LOGGER.logIntoFile(Level.FINE, "Gender is not valid: " + inputOfUser);
                 }
                 Utils.stop(100);
             }
@@ -170,15 +182,15 @@ public class CreateAccount {
         return inputOfUser;
     }
     // Method for inserting the main values into the database
-    public void createAccount_insertMainValues(Connection connection, String input_FirstName, String input_LastName, String input_PhoneNumber, String input_Email, String input_Pin, String input_Password) {
+    public void createAccount_insertMainValues(Connection connection, String input_FirstName, String input_LastName, String input_PhoneNumber, String input_Email, String input_Pin, String input_Password, String input_Gender) {
         String query_insert = database_bankMembers.createInsertQuery();
 
         try (PreparedStatement preparedStatement_insertMainData = database_bankMembers.preparedStatement_create(connection, query_insert)) {
-            database_bankMembers.setValues_InsertQuery(preparedStatement_insertMainData, input_FirstName, input_LastName, input_PhoneNumber, input_Email.toLowerCase(), input_Pin, input_Password);
+            database_bankMembers.setValues_InsertQuery(preparedStatement_insertMainData, input_FirstName, input_LastName, input_PhoneNumber, input_Email.toLowerCase(), input_Pin, input_Password, input_Gender.toLowerCase());
             database_bankMembers.preparedStatement_executeUpdate(preparedStatement_insertMainData);
-            fileLogger.logIntoFile(Level.INFO, "Inserted the main values successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Inserted the main values successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to insert the main values into the database. Error code: 17", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to insert the main values into the database. Error code: 17", e);
             System.out.println("Something went wrong, please try again. Error code: 17");
         }
     }
@@ -191,10 +203,14 @@ public class CreateAccount {
         try (PreparedStatement preparedStatement_updateAccountNumber = database_bankMembers.preparedStatement_create(connection, query_update)) {
             database_bankMembers.setValues_onePlaceholder(preparedStatement_updateAccountNumber, input_Email);
             database_bankMembers.preparedStatement_executeUpdate(preparedStatement_updateAccountNumber);
-            fileLogger.logIntoFile(Level.INFO, "Inserted the account number successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Inserted the account number successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to insert the account number into the database. Error code: 18", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to insert the account number into the database. Error code: 18", e);
             System.out.println("Something went wrong, please try again. Error code: 18");
         }
+    }
+
+    public String get_Email() {
+        return input_Email;
     }
 }

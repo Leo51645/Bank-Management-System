@@ -3,7 +3,7 @@ package com.github.Leo51645.utils;
 import com.github.Leo51645.enums.Bank_Members_Columns;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.mysql.Database_BankMembers;
-import com.github.Leo51645.services.account_management.login.Login;
+import com.github.Leo51645.services.Services;
 import com.github.Leo51645.utils.fileLogging.FallbackLogger;
 import com.github.Leo51645.utils.fileLogging.FileLogger;
 
@@ -17,11 +17,11 @@ public class Utils {
 
     private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
 
-    public static FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    public static FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private static final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private static final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
     public Utils() {
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     public static void printLoadingScreen() {
@@ -35,7 +35,7 @@ public class Utils {
                 "           `---' ");
         System.out.println("---------------------------------------------------------------------");
         stop(3000);
-        fileLogger.logIntoFile(Level.INFO, "Loading screen");
+        FILE_LOGGER.logIntoFile(Level.INFO, "Loading screen");
     }
 
     public static void printListOfActions_bl() {
@@ -47,11 +47,22 @@ public class Utils {
         System.out.println("---------------------------------------------------------------------");
     }
 
-    public static void printStartGUI(Connection connection, Login login) {
+    public static void printStartGUI(Connection connection, Services services) {
 
         Database_BankMembers database_bankMembers = new Database_BankMembers();
-        Object email_object = login.getEmail();
+        Object email_object = services.getEmail();
         String email = email_object.toString();
+
+        String salutation = null;
+        Object gender_database = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.GENDER.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        String gender = gender_database.toString();
+        if (gender.equals("male")) {
+            salutation = "Mr. ";
+        } else if (gender.equals("female")) {
+            salutation = "Ms.";
+        } else if (gender.isBlank()){
+            salutation = "Mr. or Ms.";
+        }
 
         Object lastName = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.LASTNAME.columnName, Bank_Members_Columns.EMAIL.columnName, email);
 
@@ -66,7 +77,7 @@ public class Utils {
         System.out.println("---------------------------------------------------------------------\n" +
                            "|" + iban + "                                       " + time + " |\n" +
                            "|                        Welcome,                                    |\n" +
-                           "|                   Mr. or Mrs " + lastName + "                               |\n" +
+                           "|                      " + salutation + lastName + "                                   |\n" +
                            "|                                                                    |\n" +
                            "|                Account Balance:                                    |\n" +
                            "|                      " + accountBalance + "                                         |\n" +
@@ -74,7 +85,7 @@ public class Utils {
                            "|                How can we help you with?                           |\n" +
                            "|                  .transfer || .invest || .logout                   |\n" +
                            "---------------------------------------------------------------------");
-        fileLogger.logIntoFile(Level.INFO, "Start GUI");
+        FILE_LOGGER.logIntoFile(Level.INFO, "Start GUI");
     }
 
     public static void stop(int milliseconds) {

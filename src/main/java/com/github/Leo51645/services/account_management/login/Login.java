@@ -18,14 +18,14 @@ public class Login {
 
     private static final Logger LOGGER = Logger.getLogger(Login.class.getName());
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
     private String email;
 
     public Login(Database_BankMembers database_bankMembers) {
         this.database_bankMembers = database_bankMembers;
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Method for login into an existing account
@@ -53,20 +53,20 @@ public class Login {
                     if (dbPassword != null && dbPassword.equals(password)) {
                         System.out.println("Login successful");
                         login_status = true;
-                        fileLogger.logIntoFile(Level.INFO, "Logged into account in successfully");
+                        FILE_LOGGER.logIntoFile(Level.INFO, "Logged into account in successfully");
                     } else {
                         System.out.println("Wrong password, please try again");
                         System.out.println("---------------------------------------------------------------------");
-                        fileLogger.logIntoFile(Level.INFO, "Wrong password submitted by user");
+                        FILE_LOGGER.logIntoFile(Level.INFO, "Wrong password submitted by user");
                     }
                 } else {
                     System.out.println("Email not found");
                     System.out.println("---------------------------------------------------------------------");
-                    fileLogger.logIntoFile(Level.INFO, "Email given by user not found");
+                    FILE_LOGGER.logIntoFile(Level.INFO, "Email given by user not found");
                 }
             }
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to login. Error code: 23", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to login. Error code: 23", e);
             System.out.println("Something went wrong, please try again. Error code: 23");
         }
 
@@ -74,6 +74,6 @@ public class Login {
     }
 
     public String getEmail() {
-        return this.email.toLowerCase();
+        return this.email != null ? this.email.toLowerCase() : "";
     }
 }

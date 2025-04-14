@@ -1,5 +1,6 @@
 package com.github.Leo51645.services.extras;
 
+
 public class ExtraFunctions {
 
     // Method for converting letters to numbers + 10
@@ -35,5 +36,8 @@ public class ExtraFunctions {
     }
     public boolean isValidIban(String iban_toCheck) {
         return iban_toCheck.matches("^[A-Z]{2}\\s?[0-9]{2}\\s?([A-Z0-9]{4}\\s?){2,7}[A-Z0-9]{0,4}$");
+    }
+    public boolean isValidGender(String gender_toCheck) {
+        return gender_toCheck == null || gender_toCheck.matches("^(?i)(male|female|divers)?$");
     }
 }

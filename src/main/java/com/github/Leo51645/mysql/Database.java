@@ -13,11 +13,13 @@ public abstract class Database {
 
     private final Logger LOGGER = Logger.getLogger(Database.class.getName());
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
+
+    private static final int connection_timeout_sec = 2;
 
     public Database() {
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Method for getting the infos for the connection(url, user, password)
@@ -31,9 +33,9 @@ public abstract class Database {
             while ((line = bufferedReader.readLine()) != null) {
                 connection_infos.add(line);
             }
-            fileLogger.logIntoFile(Level.INFO, "Got the database infos successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Got the database infos successfully");
         } catch (IOException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to get connection infos. Error code: 01", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to get connection infos. Error code: 01", e);
             System.out.println("Something went wrong, please try again. Error code: 01");
         }
 
@@ -58,13 +60,13 @@ public abstract class Database {
             }
 
             connection = DriverManager.getConnection(url, user, password);
-            fileLogger.logIntoFile(Level.INFO, "Connected to database successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Connected to database successfully");
 
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.SEVERE, "Failed to connect to database. Error code: 02", e);
+            FILE_LOGGER.logIntoFile(Level.SEVERE, "Failed to connect to database. Error code: 02", e);
             System.out.println("Something went wrong, please try again. Error code: 02");
         } catch (IllegalArgumentException e) {
-            fileLogger.logIntoFile(Level.SEVERE, "Failed to get correct database info. Error code: 03", e);
+            FILE_LOGGER.logIntoFile(Level.SEVERE, "Failed to get correct database info. Error code: 03", e);
             System.out.println("Something went wrong, please try again. Error code: 03");
         }
         return connection;
@@ -73,14 +75,14 @@ public abstract class Database {
     public boolean connection_check(Connection connection) {
         boolean connection_status = false;
         try {
-            if (connection.isValid(2)) {
+            if (connection.isValid(connection_timeout_sec)) {
                 connection_status = true;
-                fileLogger.logIntoFile(Level.INFO, "Connection is valid");
+                FILE_LOGGER.logIntoFile(Level.INFO, "Connection is valid");
             } else {
-                fileLogger.logIntoFile(Level.SEVERE, "Connection is not valid");
+                FILE_LOGGER.logIntoFile(Level.SEVERE, "Connection is not valid");
             }
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.INFO, "Failed to check database connection. Error code: 04", e);
+            FILE_LOGGER.logIntoFile(Level.INFO, "Failed to check database connection. Error code: 04", e);
             System.out.println("Something went wrong, please try again - Error Code: 04");
         }
         return connection_status;
@@ -91,9 +93,9 @@ public abstract class Database {
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = connection.prepareStatement(query);
-            fileLogger.logIntoFile(Level.INFO, "Created preparedStatement successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Created preparedStatement successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.SEVERE, "Failed to create PreparedStatement. Error code: 05", e);
+            FILE_LOGGER.logIntoFile(Level.SEVERE, "Failed to create PreparedStatement. Error code: 05", e);
             System.out.println("Something went wrong, please try again. Error code: 05");
         }
         return preparedStatement;
@@ -102,9 +104,9 @@ public abstract class Database {
     public void preparedStatement_executeUpdate(PreparedStatement preparedStatement) {
         try {
             preparedStatement.executeUpdate();
-            fileLogger.logIntoFile(Level.INFO, "Executed the preparedStatement successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Executed the preparedStatement successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to execute query in the PreparedStatement. Error Code: 06", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to execute query in the PreparedStatement. Error Code: 06", e);
             System.out.println("Something went wrong, please try again. Error code 06");
         }
     }
@@ -114,9 +116,9 @@ public abstract class Database {
         try {
             preparedStatement.setObject(1, x1);
             preparedStatement.setObject(2, x2);
-            fileLogger.logIntoFile(Level.INFO, "Set two values in the preparedStatement successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Set two values in the preparedStatement successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to set the two variables correctly in query. Error code: 07", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to set the two variables correctly in query. Error code: 07", e);
             System.out.println("Something went wrong, please try again. Error code: 07");
         }
 
@@ -124,9 +126,9 @@ public abstract class Database {
     public <T> void setValues_onePlaceholder(PreparedStatement preparedStatement, T x1) {
         try {
             preparedStatement.setObject(1, x1);
-            fileLogger.logIntoFile(Level.INFO, "Set one value in the preparedStatement successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Set one value in the preparedStatement successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to set the one variable correctly in query. Error code: 08", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to set the one variable correctly in query. Error code: 08", e);
             System.out.println("Something went wrong, please try again. Error code: 08");
         }
     }
@@ -136,9 +138,9 @@ public abstract class Database {
         ResultSet resultSet = null;
         try {
             resultSet = preparedStatement.executeQuery();
-            fileLogger.logIntoFile(Level.INFO, "Created resultSet successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Created resultSet successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.SEVERE, "Failed to create resultSet. Error code: 09", e);
+            FILE_LOGGER.logIntoFile(Level.SEVERE, "Failed to create resultSet. Error code: 09", e);
             System.out.println("Something went wrong, please try again. Error code: 09");
         }
         return resultSet;
@@ -154,9 +156,9 @@ public abstract class Database {
                     values_ResultSet.add(resultSet.getObject(i));
                 }
             }
-            fileLogger.logIntoFile(Level.INFO, "Got all values of the resultSet successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Got all values of the resultSet successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to get values of resultSet. Error code: 10", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to get values of resultSet. Error code: 10", e);
             System.out.println("Something went wrong, please try again. Error code: 10");
         }
         return values_ResultSet;

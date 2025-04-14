@@ -1,7 +1,6 @@
 package com.github.Leo51645;
 
 import com.github.Leo51645.enums.FilePaths;
-import com.github.Leo51645.mysql.Database;
 import com.github.Leo51645.mysql.Database_BankMembers;
 import com.github.Leo51645.services.Services;
 import com.github.Leo51645.services.account_management.login.Login;
@@ -21,24 +20,23 @@ public class Main {
         Database_BankMembers database_bankMembers = new Database_BankMembers();
         Services services = new Services(database_bankMembers);
 
-        File file = new File(FilePaths.DATABASEINFOS.filepaths);
+        File file = new File(FilePaths.DATABASEINFOS.filePaths);
 
-        final Logger LOGGER = Logger.getLogger(Database.class.getName());
+        final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
-        FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-        FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+        FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+        FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, fallbackLogger);
         fallbackLogger.setFileLogger(fileLogger);
 
         ArrayList<String> connection_info = database_bankMembers.connection_getInfos(file);
         Connection connection = database_bankMembers.connection_get(connection_info);
 
         boolean connectionStatus = database_bankMembers.connection_check(connection);
-        System.out.println(connectionStatus);
         if (connectionStatus) {
             Utils.printLoadingScreen();
-            Login login = services.getRegistration(connection);
             Utils.stop(1000);
-            Utils.printStartGUI(connection, login);
+            services.getRegistration(connection);
+            Utils.printStartGUI(connection, services);
         } else {
             fileLogger.logIntoFile(Level.SEVERE, "Database is currently offline: Error code: 00");
             System.out.println("Something went wrong, please try again. Error code: 00");

@@ -3,7 +3,7 @@ package com.github.Leo51645.services.transaction.deposit;
 import com.github.Leo51645.enums.Bank_Members_Columns;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.mysql.Database_BankMembers;
-import com.github.Leo51645.services.account_management.login.Login;
+import com.github.Leo51645.services.Services;
 import com.github.Leo51645.utils.fileLogging.FallbackLogger;
 import com.github.Leo51645.utils.fileLogging.FileLogger;
 
@@ -17,13 +17,13 @@ public class Deposit {
 
     private static final Logger LOGGER = Logger.getLogger(Deposit.class.getName());
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
-    public Deposit(Database_BankMembers database_bankMembers, Login login) {
+    public Deposit(Database_BankMembers database_bankMembers, Services services) {
         this.database_bankMembers = database_bankMembers;
-        this.email = login.getEmail();
-        fallbackLogger.setFileLogger(fileLogger);
+        this.email = services.getEmail();
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Method for depositing money onto an account
@@ -35,7 +35,7 @@ public class Deposit {
         String accountBalance_String = accountBalance_Database.toString();
 
         if (!(accountBalance_Database instanceof Double)) {
-            fileLogger.logIntoFile(Level.INFO, "User tries to deposit money to a not existing account");
+            FILE_LOGGER.logIntoFile(Level.INFO, "User tries to deposit money to a not existing account");
             System.out.println("Account is not existing, please create one before");
             return;
         }
@@ -51,7 +51,7 @@ public class Deposit {
             database_bankMembers.setValues_twoPlaceholder(preparedStatement, newAccountBalance, email);
             database_bankMembers.preparedStatement_executeUpdate(preparedStatement);
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to deposit money. Error code: 27", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to deposit money. Error code: 27", e);
             System.out.println("Something went wrong, please try again. Error code: 27");
         }
 

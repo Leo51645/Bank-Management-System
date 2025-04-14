@@ -19,15 +19,15 @@ public class Test {
         Database_BankMembers database_bankMembers = new Database_BankMembers();
         Services services = new Services(database_bankMembers);
         CreateAccount createAccount = new CreateAccount(database_bankMembers);
-        File file = new File(FilePaths.DATABASEINFOS.filepaths);
+        File file = new File(FilePaths.DATABASEINFOS.filePaths);
         ArrayList<String> connection_infos = database_bankMembers.connection_getInfos(file);
 
         Connection connection = database_bankMembers.connection_get(connection_infos);
 
         final Logger LOGGER = Logger.getLogger(Test.class.getName());
 
-        FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-        FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+        FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+        FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, fallbackLogger);
         fallbackLogger.setFileLogger(fileLogger);
 
 

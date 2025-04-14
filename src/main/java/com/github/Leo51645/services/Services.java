@@ -20,8 +20,8 @@ public class Services {
     private static final Logger LOGGER = Logger.getLogger(Services.class.getName());
     private final Scanner scanner = new Scanner(System.in);
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
     CreateAccount createAccount;
     Login login;
@@ -31,7 +31,7 @@ public class Services {
         this.login = new Login(database_bankMembers);
         this.createAccount = new CreateAccount(database_bankMembers);
         this.extraFunctions = new ExtraFunctions();
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Method for getting the user input
@@ -42,16 +42,16 @@ public class Services {
         System.out.println("---------------------------------------------------------------------");
 
             if (extraFunctions.isValidCommand(userAction) && (Objects.equals(userAction, UserInput_beforeLogin.LOGIN.command) || Objects.equals(userAction, UserInput_beforeLogin.CREATEACCOUNT.command))) {
-                fileLogger.logIntoFile(Level.INFO, "Got user input before login successfully");
+                FILE_LOGGER.logIntoFile(Level.INFO, "Got user input before login successfully");
                 return userAction;
             } else {
-                fileLogger.logIntoFile(Level.INFO, "Invalid input by user: " + userAction);
+                FILE_LOGGER.logIntoFile(Level.INFO, "Invalid input by user: " + userAction);
                 return null;
         }
     }
 
     // Method for create an account or login
-    public Login getRegistration(Connection connection) {
+    public void getRegistration(Connection connection) {
         boolean registrationStatus = false;
         String userAction = null;
         while(!registrationStatus) {
@@ -70,11 +70,18 @@ public class Services {
             } else if (userAction.equals(UserInput_beforeLogin.LOGIN.command)) {
                 registrationStatus = login.loginIntoAccount(connection);
             } else {
-                fileLogger.logIntoFile(Level.WARNING, "Failed to get the user correct user info and with that to create a new account or to login. Error code: 16");
+                FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to get the user correct user info and with that to create a new account or to login. Error code: 16");
                 System.out.println("Something went wrong. Error code: 16");
             }
         }
-        return login;
+    }
+
+    public String getEmail() {
+        String email_createAccount = createAccount.get_Email();
+        String email_login = login.getEmail();
+        if (email_createAccount != null) {
+            return email_createAccount;
+        } else return email_login;
     }
 
 }

@@ -12,17 +12,17 @@ public class Database_BankMembers extends Database implements IDatabase {
 
     private final Logger LOGGER = Logger.getLogger(Database_BankMembers.class.getName());
 
-    FallbackLogger fallbackLogger = new FallbackLogger(FilePaths.LOG.filepaths, false, null);
-    FileLogger fileLogger = new FileLogger(LOGGER, FilePaths.LOG.filepaths, false, fallbackLogger);
+    private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
+    private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
     public Database_BankMembers() {
-        fallbackLogger.setFileLogger(fileLogger);
+        FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
     // Methods for creating new queries
     @Override
     public String createInsertQuery() {
-        return "Insert into Bank_Members(First_Name, Last_Name, Phone_Number, Email, account_pin, Password) values (?, ?, ?, ?, ?, ?)";
+        return "Insert into Bank_Members(First_Name, Last_Name, Phone_Number, Email, account_pin, Password, gender) values (?, ?, ?, ?, ?, ?, ?)";
     }
     @Override
     public String createUpdateQuery(String columnToUpdate, String condition_column) {
@@ -46,8 +46,7 @@ public class Database_BankMembers extends Database implements IDatabase {
     }
 
     // Method for inserting values in an insert query
-    @Override
-    public void setValues_InsertQuery(PreparedStatement preparedStatement, String setFirst_Name, String setLast_Name, String setPhone_Number, String setEmail, String set_account_pin, String set_password) {
+    public void setValues_InsertQuery(PreparedStatement preparedStatement, String setFirst_Name, String setLast_Name, String setPhone_Number, String setEmail, String set_account_pin, String set_password, String setGender) {
         try {
             preparedStatement.setString(1, setFirst_Name);
             preparedStatement.setString(2, setLast_Name);
@@ -55,9 +54,10 @@ public class Database_BankMembers extends Database implements IDatabase {
             preparedStatement.setString(4, setEmail);
             preparedStatement.setString(5, set_account_pin);
             preparedStatement.setString(6, set_password);
-            fileLogger.logIntoFile(Level.INFO, "Set the values inside the insert query successfully");
+            preparedStatement.setString(7, setGender);
+            FILE_LOGGER.logIntoFile(Level.INFO, "Set the values inside the insert query successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to set variables correctly in insert query. Error code: 11", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to set variables correctly in insert query. Error code: 11", e);
             System.out.println("Failed to set variables correctly in insert query");
         }
 
@@ -79,13 +79,13 @@ public class Database_BankMembers extends Database implements IDatabase {
                 if (resultSet.next()) {
                     columnType = resultSet.getMetaData().getColumnTypeName(1);
                 } else {
-                    fileLogger.logIntoFile(Level.WARNING, "ResultSet is empty. Error code: 12");
+                    FILE_LOGGER.logIntoFile(Level.WARNING, "ResultSet is empty. Error code: 12");
                     System.out.println("Something went wrong, please try again. Error code: 12");
                     return null;
                 }
 
                 if (columnType == null) {
-                    fileLogger.logIntoFile(Level.WARNING, "Empty column type in resultSet. Error Code: 13");
+                    FILE_LOGGER.logIntoFile(Level.WARNING, "Empty column type in resultSet. Error Code: 13");
                     System.out.println("Something went wrong, please try again. Error code: 13");
                     return null;
                 }
@@ -98,10 +98,10 @@ public class Database_BankMembers extends Database implements IDatabase {
                     case "INT": data = resultSet.getInt(1);
                 }
             }
-            fileLogger.logIntoFile(Level.INFO, "Selected one column out of the database successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Selected one column out of the database successfully");
 
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to get one specific column out of the database. Error code: 14", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to get one specific column out of the database. Error code: 14", e);
             System.out.println("Something went wrong, please try again. Error code: 14");
         }
         return data;
@@ -120,9 +120,9 @@ public class Database_BankMembers extends Database implements IDatabase {
                 ArrayList<Object> data = resultSet_getAllValues(resultSet);
                 status = !data.isEmpty();
             }
-            fileLogger.logIntoFile(Level.INFO, "Checked if unique already exists successfully");
+            FILE_LOGGER.logIntoFile(Level.INFO, "Checked if unique already exists successfully");
         } catch (SQLException e) {
-            fileLogger.logIntoFile(Level.WARNING, "Failed to check if a unique already exists. Error code: 15", e);
+            FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to check if a unique already exists. Error code: 15", e);
             System.out.println("Something went wrong, please try again. Error code: 15");
         }
 
