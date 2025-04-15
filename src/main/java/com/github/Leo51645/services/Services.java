@@ -1,7 +1,7 @@
 package com.github.Leo51645.services;
 
 import com.github.Leo51645.enums.FilePaths;
-import com.github.Leo51645.enums.UserInput_beforeLogin;
+import com.github.Leo51645.enums.UserInputBeforeLogin;
 import com.github.Leo51645.services.extras.ExtraFunctions;
 import com.github.Leo51645.utils.fileLogging.FallbackLogger;
 import com.github.Leo51645.utils.fileLogging.FileLogger;
@@ -41,7 +41,7 @@ public class Services {
         String userAction = scanner.nextLine();
         System.out.println("---------------------------------------------------------------------");
 
-            if (extraFunctions.isValidCommand(userAction) && (Objects.equals(userAction, UserInput_beforeLogin.LOGIN.command) || Objects.equals(userAction, UserInput_beforeLogin.CREATEACCOUNT.command))) {
+            if (extraFunctions.isValidCommand(userAction) && (Objects.equals(userAction, UserInputBeforeLogin.LOGIN.command) || Objects.equals(userAction, UserInputBeforeLogin.CREATEACCOUNT.command))) {
                 FILE_LOGGER.logIntoFile(Level.INFO, "Got user input before login successfully");
                 return userAction;
             } else {
@@ -59,15 +59,15 @@ public class Services {
             while(userAction == null) {
                 userAction = getInput_beforeLogin();
                 if(userAction == null) {
-                    System.out.println("Invalid command. Please enter either '" + UserInput_beforeLogin.CREATEACCOUNT.command + "' or '" + UserInput_beforeLogin.LOGIN.command + "'");
+                    System.out.println("Invalid command. Please enter either '" + UserInputBeforeLogin.CREATEACCOUNT.command + "' or '" + UserInputBeforeLogin.LOGIN.command + "'");
                     System.out.println("---------------------------------------------------------------------");
                     Utils.stop(1250);
                 }
             }
 
-            if (userAction.equals(UserInput_beforeLogin.CREATEACCOUNT.command)) {
+            if (userAction.equals(UserInputBeforeLogin.CREATEACCOUNT.command)) {
                 registrationStatus = createAccount.createUserAccount(connection);
-            } else if (userAction.equals(UserInput_beforeLogin.LOGIN.command)) {
+            } else if (userAction.equals(UserInputBeforeLogin.LOGIN.command)) {
                 registrationStatus = login.loginIntoAccount(connection);
             } else {
                 FILE_LOGGER.logIntoFile(Level.WARNING, "Failed to get the user correct user info and with that to create a new account or to login. Error code: 16");

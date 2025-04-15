@@ -1,6 +1,6 @@
 package com.github.Leo51645.services.account_management.createAccount;
 
-import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.BankMembersColumns;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.mysql.Database;
 import com.github.Leo51645.services.extras.ExtraFunctions;
@@ -72,7 +72,7 @@ public class Iban {
     public String iban_accountNumber_get(Database database, Connection connection, String emailOfUser) {
         ArrayList<Object> resultSetData = null;
 
-        String query = database_bankMembers.createSelectQuery(Bank_Members_Columns.ACCOUNTNUMBER.columnName, Bank_Members_Columns.EMAIL.columnName);
+        String query = database_bankMembers.createSelectQuery(BankMembersColumns.ACCOUNTNUMBER.columnName, BankMembersColumns.EMAIL.columnName);
 
         try (PreparedStatement preparedStatement = database.preparedStatement_create(connection, query)) {
             database_bankMembers.setValues_onePlaceholder(preparedStatement, emailOfUser);

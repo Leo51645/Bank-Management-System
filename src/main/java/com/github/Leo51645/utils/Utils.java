@@ -1,6 +1,6 @@
 package com.github.Leo51645.utils;
 
-import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.BankMembersColumns;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.mysql.Database_BankMembers;
 import com.github.Leo51645.services.Services;
@@ -54,7 +54,7 @@ public class Utils {
         String email = email_object.toString();
 
         String salutation = null;
-        Object gender_database = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.GENDER.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object gender_database = database_bankMembers.resultSet_selectSpecificColumn(connection, BankMembersColumns.GENDER.columnName, BankMembersColumns.EMAIL.columnName, email);
         String gender = gender_database.toString();
         if (gender.equals("male")) {
             salutation = "Mr. ";
@@ -64,12 +64,12 @@ public class Utils {
             salutation = "Mr. or Ms.";
         }
 
-        Object lastName = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.LASTNAME.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object lastName = database_bankMembers.resultSet_selectSpecificColumn(connection, BankMembersColumns.LASTNAME.columnName, BankMembersColumns.EMAIL.columnName, email);
 
-        Object accountBalance_withoutEuro = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.ACCOUNTBALANCE.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object accountBalance_withoutEuro = database_bankMembers.resultSet_selectSpecificColumn(connection, BankMembersColumns.ACCOUNTBALANCE.columnName, BankMembersColumns.EMAIL.columnName, email);
         String accountBalance = String.format("%.2f€", accountBalance_withoutEuro);
 
-        Object iban = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.IBAN.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object iban = database_bankMembers.resultSet_selectSpecificColumn(connection, BankMembersColumns.IBAN.columnName, BankMembersColumns.EMAIL.columnName, email);
 
         String time = getTime();
 

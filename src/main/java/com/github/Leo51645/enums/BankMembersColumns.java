@@ -1,6 +1,6 @@
 package com.github.Leo51645.enums;
 
-public enum Bank_Members_Columns {
+public enum BankMembersColumns {
     MYBANKID("MyBank_Id"),
     IBAN("IBAN"),
     ACCOUNTBALANCE("Account_balance"),
@@ -15,7 +15,7 @@ public enum Bank_Members_Columns {
 
     public final String columnName;
 
-    Bank_Members_Columns(String columnName) {
+    BankMembersColumns(String columnName) {
         this.columnName = columnName;
     }
 }

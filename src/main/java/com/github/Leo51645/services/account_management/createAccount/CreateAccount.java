@@ -1,10 +1,11 @@
 package com.github.Leo51645.services.account_management.createAccount;
 
-import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.BankMembersColumns;
 import com.github.Leo51645.enums.Countries;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.enums.Table;
 import com.github.Leo51645.services.extras.ExtraFunctions;
+import com.github.Leo51645.utils.bcrypt.Hash;
 import com.github.Leo51645.utils.fileLogging.FallbackLogger;
 import com.github.Leo51645.utils.fileLogging.FileLogger;
 import com.github.Leo51645.mysql.Database_BankMembers;
@@ -23,8 +24,9 @@ public class CreateAccount {
     private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
     private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
-    Iban iban;
-    ExtraFunctions extraFunctions;
+    private final Iban iban;
+    private final ExtraFunctions extraFunctions;
+    private final Hash hash;
 
     private String input_Email;
 
@@ -32,6 +34,7 @@ public class CreateAccount {
         this.database_bankMembers = database_bankMembers;
         this.iban = new Iban(database_bankMembers);
         this.extraFunctions = new ExtraFunctions();
+        this.hash = new Hash();
         FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
@@ -51,12 +54,12 @@ public class CreateAccount {
             System.out.println("Creating a new Account:");
             System.out.println("---------------------------------------------------------------------");
 
-            String input_FirstName = createAccount_checkInputs(Bank_Members_Columns.FIRSTNAME.columnName);
-            String input_LastName = createAccount_checkInputs(Bank_Members_Columns.LASTNAME.columnName);
-            String input_Gender = createAccount_checkInputs(Bank_Members_Columns.GENDER.columnName);
+            String input_FirstName = createAccount_checkInputs(BankMembersColumns.FIRSTNAME.columnName);
+            String input_LastName = createAccount_checkInputs(BankMembersColumns.LASTNAME.columnName);
+            String input_Gender = createAccount_checkInputs(BankMembersColumns.GENDER.columnName);
             while (phoneNumber_exists) {
-                input_PhoneNumber = createAccount_checkInputs(Bank_Members_Columns.PHONENUMBER.columnName);
-                phoneNumber_exists = database_bankMembers.unique_exists(connection, Bank_Members_Columns.PHONENUMBER.columnName, input_PhoneNumber);
+                input_PhoneNumber = createAccount_checkInputs(BankMembersColumns.PHONENUMBER.columnName);
+                phoneNumber_exists = database_bankMembers.unique_exists(connection, BankMembersColumns.PHONENUMBER.columnName, input_PhoneNumber);
 
                 if (phoneNumber_exists) {
                     System.out.println("Phone number already existing, please try again");
@@ -65,8 +68,8 @@ public class CreateAccount {
                 }
             }
             while (email_exists) {
-                input_Email = createAccount_checkInputs(Bank_Members_Columns.EMAIL.columnName);
-                email_exists = database_bankMembers.unique_exists(connection, Bank_Members_Columns.EMAIL.columnName, input_Email);
+                input_Email = createAccount_checkInputs(BankMembersColumns.EMAIL.columnName);
+                email_exists = database_bankMembers.unique_exists(connection, BankMembersColumns.EMAIL.columnName, input_Email);
 
                 if (email_exists) {
                     System.out.println("Email already existing, please try again");
@@ -74,8 +77,7 @@ public class CreateAccount {
                     FILE_LOGGER.logIntoFile(Level.FINE, "User wanted to create a new account with an already existing email");
                 }
             }
-            String input_Pin = createAccount_checkInputs(Bank_Members_Columns.ACCOUNTPIN.columnName);
-
+            String input_Pin = createAccount_checkInputs(BankMembersColumns.ACCOUNTPIN.columnName);
 
             System.out.print("Please enter your password for your 'MyBank' account: ");
             String input_Password = scanner.nextLine();
@@ -90,7 +92,7 @@ public class CreateAccount {
             // Inserting the iban value separately into the database
             String ibanNumber = iban.iban_create(connection, Countries.GREATBRITAIN.countryCode, input_Email);
 
-            String iban_query = database_bankMembers.createUpdateQuery(Bank_Members_Columns.IBAN.columnName, Bank_Members_Columns.EMAIL.columnName);
+            String iban_query = database_bankMembers.createUpdateQuery(BankMembersColumns.IBAN.columnName, BankMembersColumns.EMAIL.columnName);
 
             try (PreparedStatement preparedStatement_iban = database_bankMembers.preparedStatement_create(connection, iban_query)) {
                 // Checking if the iban is valid
@@ -124,7 +126,7 @@ public class CreateAccount {
 
         while(!isValidInput) {
 
-            if (input_name.equals(Bank_Members_Columns.GENDER.columnName)) {
+            if (input_name.equals(BankMembersColumns.GENDER.columnName)) {
                 System.out.print("Please enter your gender (optional): ");
             } else {
                 System.out.print("Please enter your " + input_name + ": ");
@@ -132,7 +134,7 @@ public class CreateAccount {
             inputOfUser = scanner.nextLine();
             System.out.println("---------------------------------------------------------------------");
 
-            if (input_name.equals(Bank_Members_Columns.FIRSTNAME.columnName) || input_name.equals(Bank_Members_Columns.LASTNAME.columnName)) {
+            if (input_name.equals(BankMembersColumns.FIRSTNAME.columnName) || input_name.equals(BankMembersColumns.LASTNAME.columnName)) {
                 isValidInput = extraFunctions.isValidString(inputOfUser);
                 if (!isValidInput) {
                     System.out.println("To much letters, please try again");
@@ -141,7 +143,7 @@ public class CreateAccount {
                 }
                 Utils.stop(100);
             }
-            else if (input_name.equals(Bank_Members_Columns.PHONENUMBER.columnName)) {
+            else if (input_name.equals(BankMembersColumns.PHONENUMBER.columnName)) {
                 isValidInput = extraFunctions.isValidPhoneNumber(inputOfUser);
                 if (!isValidInput) {
                     System.out.println("Invalid phone number, please try again");
@@ -150,7 +152,7 @@ public class CreateAccount {
                 }
                 Utils.stop(100);
             }
-            else if (input_name.equals(Bank_Members_Columns.EMAIL.columnName)) {
+            else if (input_name.equals(BankMembersColumns.EMAIL.columnName)) {
                 isValidInput = extraFunctions.isValidEmail(inputOfUser);
                 if (!isValidInput) {
                     System.out.println("Invalid email, please try again");
@@ -159,7 +161,7 @@ public class CreateAccount {
                 }
                 Utils.stop(100);
             }
-            else if (input_name.equals(Bank_Members_Columns.ACCOUNTPIN.columnName)) {
+            else if (input_name.equals(BankMembersColumns.ACCOUNTPIN.columnName)) {
                 isValidInput = extraFunctions.isValidPin(inputOfUser);
                 if (!isValidInput) {
                     System.out.println("Invalid PIN, has to be 4 digits");
@@ -168,7 +170,7 @@ public class CreateAccount {
                 }
                 Utils.stop(100);
             }
-            else if (input_name.equals(Bank_Members_Columns.GENDER.columnName)) {
+            else if (input_name.equals(BankMembersColumns.GENDER.columnName)) {
                 isValidInput = extraFunctions.isValidGender(inputOfUser);
                 if (!isValidInput) {
                     System.out.println("Invalid gender; please enter one of these: 'Male', 'Female', 'Divers'\n or just leave it blank if you don't want to answer");
@@ -185,8 +187,10 @@ public class CreateAccount {
     public void createAccount_insertMainValues(Connection connection, String input_FirstName, String input_LastName, String input_PhoneNumber, String input_Email, String input_Pin, String input_Password, String input_Gender) {
         String query_insert = database_bankMembers.createInsertQuery();
 
+        String hashedPassword = hash.hashPassword(input_Password, 12);
+
         try (PreparedStatement preparedStatement_insertMainData = database_bankMembers.preparedStatement_create(connection, query_insert)) {
-            database_bankMembers.setValues_InsertQuery(preparedStatement_insertMainData, input_FirstName, input_LastName, input_PhoneNumber, input_Email.toLowerCase(), input_Pin, input_Password, input_Gender.toLowerCase());
+            database_bankMembers.setValues_InsertQuery(preparedStatement_insertMainData, input_FirstName, input_LastName, input_PhoneNumber, input_Email.toLowerCase(), input_Pin, hashedPassword, input_Gender.toLowerCase());
             database_bankMembers.preparedStatement_executeUpdate(preparedStatement_insertMainData);
             FILE_LOGGER.logIntoFile(Level.INFO, "Inserted the main values successfully");
         } catch (SQLException e) {
@@ -197,8 +201,8 @@ public class CreateAccount {
     public void createAccount_insertAccountNumber(Connection connection, String input_Email) {
         String query_update =
                 "UPDATE " + Table.BANK_MEMBERS.tableName +
-                        " SET " + Bank_Members_Columns.ACCOUNTNUMBER.columnName + " = GenerateAccountNumber(MyBank_Id) " +
-                        " WHERE " + Bank_Members_Columns.EMAIL.columnName + " = ?";
+                        " SET " + BankMembersColumns.ACCOUNTNUMBER.columnName + " = GenerateAccountNumber(MyBank_Id) " +
+                        " WHERE " + BankMembersColumns.EMAIL.columnName + " = ?";
 
         try (PreparedStatement preparedStatement_updateAccountNumber = database_bankMembers.preparedStatement_create(connection, query_update)) {
             database_bankMembers.setValues_onePlaceholder(preparedStatement_updateAccountNumber, input_Email);

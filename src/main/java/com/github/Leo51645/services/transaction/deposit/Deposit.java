@@ -1,6 +1,6 @@
 package com.github.Leo51645.services.transaction.deposit;
 
-import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.BankMembersColumns;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.mysql.Database_BankMembers;
 import com.github.Leo51645.services.Services;
@@ -31,7 +31,7 @@ public class Deposit {
         double oldAccountBalance;
 
         // Getting the old account balance to add the money on
-        Object accountBalance_Database = database_bankMembers.resultSet_selectSpecificColumn(connection, Bank_Members_Columns.ACCOUNTBALANCE.columnName, Bank_Members_Columns.EMAIL.columnName, email);
+        Object accountBalance_Database = database_bankMembers.resultSet_selectSpecificColumn(connection, BankMembersColumns.ACCOUNTBALANCE.columnName, BankMembersColumns.EMAIL.columnName, email);
         String accountBalance_String = accountBalance_Database.toString();
 
         if (!(accountBalance_Database instanceof Double)) {
@@ -45,7 +45,7 @@ public class Deposit {
         double newAccountBalance = oldAccountBalance + amountOfMoney;
 
         // Updating the old account balance
-        String query_update = database_bankMembers.createUpdateQuery(Bank_Members_Columns.ACCOUNTBALANCE.columnName, Bank_Members_Columns.IBAN.columnName);
+        String query_update = database_bankMembers.createUpdateQuery(BankMembersColumns.ACCOUNTBALANCE.columnName, BankMembersColumns.IBAN.columnName);
 
         try (PreparedStatement preparedStatement = database_bankMembers.preparedStatement_create(connection, query_update)) {
             database_bankMembers.setValues_twoPlaceholder(preparedStatement, newAccountBalance, email);

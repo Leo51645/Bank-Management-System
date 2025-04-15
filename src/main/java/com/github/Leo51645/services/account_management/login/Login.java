@@ -1,8 +1,9 @@
 package com.github.Leo51645.services.account_management.login;
 
-import com.github.Leo51645.enums.Bank_Members_Columns;
+import com.github.Leo51645.enums.BankMembersColumns;
 import com.github.Leo51645.enums.FilePaths;
 import com.github.Leo51645.mysql.Database_BankMembers;
+import com.github.Leo51645.utils.bcrypt.Hash;
 import com.github.Leo51645.utils.fileLogging.FallbackLogger;
 import com.github.Leo51645.utils.fileLogging.FileLogger;
 
@@ -21,10 +22,13 @@ public class Login {
     private final FallbackLogger FALLBACK_LOGGER = new FallbackLogger(FilePaths.LOG.filePaths, false, null);
     private final FileLogger FILE_LOGGER = new FileLogger(LOGGER, FilePaths.LOG.filePaths, false, FALLBACK_LOGGER);
 
+    private final Hash hash;
+
     private String email;
 
     public Login(Database_BankMembers database_bankMembers) {
         this.database_bankMembers = database_bankMembers;
+        this.hash = new Hash();
         FALLBACK_LOGGER.setFileLogger(FILE_LOGGER);
     }
 
@@ -42,15 +46,15 @@ public class Login {
 
         boolean login_status = false;
 
-        String selectQuery = database_bankMembers.createSelectQuery(Bank_Members_Columns.PASSWORD.columnName, Bank_Members_Columns.EMAIL.columnName);
+        String selectQuery = database_bankMembers.createSelectQuery(BankMembersColumns.PASSWORD.columnName, BankMembersColumns.EMAIL.columnName);
 
         try (PreparedStatement preparedStatement = database_bankMembers.preparedStatement_create(connection, selectQuery)) {
             database_bankMembers.setValues_onePlaceholder(preparedStatement, email);
 
             try (ResultSet resultSet = database_bankMembers.resultSet_create(preparedStatement)) {
                 if (resultSet.next()) {
-                    String dbPassword = resultSet.getString("Password");
-                    if (dbPassword != null && dbPassword.equals(password)) {
+                    String dbPassword = resultSet.getString(BankMembersColumns.PASSWORD.columnName);
+                    if (dbPassword != null && hash.checkPassword(password, dbPassword)) {
                         System.out.println("Login successful");
                         login_status = true;
                         FILE_LOGGER.logIntoFile(Level.INFO, "Logged into account in successfully");

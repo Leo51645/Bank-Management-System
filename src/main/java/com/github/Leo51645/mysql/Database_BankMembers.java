@@ -90,13 +90,12 @@ public class Database_BankMembers extends Database implements IDatabase {
                     return null;
                 }
 
-                switch (columnType) {
-                    case "VARCHAR": data = resultSet.getString(1);
-                        break;
-                    case "DECIMAL": data = resultSet.getDouble(1);
-                        break;
-                    case "INT": data = resultSet.getInt(1);
-                }
+                data = switch (columnType) {
+                    case "VARCHAR" -> resultSet.getString(1);
+                    case "DECIMAL" -> resultSet.getDouble(1);
+                    case "INT" -> resultSet.getInt(1);
+                    default -> throw new IllegalStateException("Unexpected value: " + columnType);
+                };
             }
             FILE_LOGGER.logIntoFile(Level.INFO, "Selected one column out of the database successfully");
 
